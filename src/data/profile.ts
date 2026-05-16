@@ -66,5 +66,5 @@ export const profile: Profile = {
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/wooseok-suh-2655b6232/' },
     { label: 'X', href: 'https://x.com/ray_dev_suh' },
   ],
-  email: 'hi@wooseok.dev',
+  email: 'ddarjae@naver.com',
 };
