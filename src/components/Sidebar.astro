@@ -1,0 +1,73 @@
+---
+import { profile } from '../data/profile';
+
+const { name, role, now, previously, education, elsewhere } = profile;
+---
+
+<aside class="space-y-7 text-[13px] leading-relaxed">
+  <div>
+    <h1 class="text-[22px] font-bold tracking-tight-display">{name}</h1>
+    <p class="text-ink-muted-light dark:text-ink-muted mt-1">{role}</p>
+  </div>
+
+  <section>
+    <h2 class="text-[10px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-2">
+      Now
+    </h2>
+    <div>{now.company}</div>
+    <div class="text-ink-muted-light dark:text-ink-muted text-[12px]">
+      {now.role}, {now.start} — {now.end}
+    </div>
+  </section>
+
+  {previously.length > 0 && (
+    <section>
+      <h2 class="text-[10px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-2">
+        Previously
+      </h2>
+      {previously.map((p) => (
+        <div class="mb-2 last:mb-0">
+          <div>{p.company}</div>
+          <div class="text-ink-muted-light dark:text-ink-muted text-[12px]">
+            {p.role}, {p.start} — {p.end}
+          </div>
+        </div>
+      ))}
+    </section>
+  )}
+
+  {education.length > 0 && (
+    <section>
+      <h2 class="text-[10px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-2">
+        Education
+      </h2>
+      {education.map((e) => (
+        <div class="mb-2 last:mb-0">
+          <div>{e.school}</div>
+          <div class="text-ink-muted-light dark:text-ink-muted text-[12px]">
+            {e.degree}, {e.start} — {e.end}
+          </div>
+        </div>
+      ))}
+    </section>
+  )}
+
+  <section>
+    <h2 class="text-[10px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-2">
+      Elsewhere
+    </h2>
+    <ul class="space-y-1.5">
+      {elsewhere.map((l) => (
+        <li>
+          <a
+            href={l.href}
+            class="border-b border-dotted border-ink-muted-light/40 dark:border-ink-muted/40 hover:border-ink-fg-light dark:hover:border-ink-fg transition-colors"
+            rel={l.href.startsWith('http') ? 'me' : undefined}
+          >
+            {l.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</aside>
