@@ -17,7 +17,7 @@ const {
   canonicalUrl,
 } = Astro.props;
 
-const siteName = 'wooseok.dev';
+const siteName = 'Ray Suh';
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 const canonical = canonicalUrl ?? new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
