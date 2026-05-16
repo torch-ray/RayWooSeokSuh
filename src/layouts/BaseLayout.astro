@@ -1,0 +1,64 @@
+---
+import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonicalUrl?: string;
+}
+
+const {
+  title,
+  description = 'Writing on iOS, AI, CS, and the things I am figuring out along the way.',
+  ogImage = '/og-default.svg',
+  canonicalUrl,
+} = Astro.props;
+
+const siteName = 'wooseok.dev';
+const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
+const canonical = canonicalUrl ?? new URL(Astro.url.pathname, Astro.site).toString();
+const ogImageUrl = new URL(ogImage, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+
+    <ClientRouter />
+  </head>
+  <body>
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:bg-ink-surface-light focus:text-ink-fg-light focus:rounded"
+    >
+      Skip to content
+    </a>
+    <slot />
+  </body>
+</html>
