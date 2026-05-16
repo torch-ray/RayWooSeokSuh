@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { profile } from '../data/profile';
+
+const { name, lede, now, previously, education, projects, elsewhere, email } = profile;
+const work = [now, ...previously];
+---
+
+<BaseLayout title="About">
+  <SiteNav />
+  <main id="main" class="mx-auto max-w-page px-6 sm:px-8 pt-16 pb-20">
+    <div class="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-3">
+      About
+    </div>
+    <h1 class="text-[40px] font-bold tracking-tight-display leading-[1.1] mb-5">{name}</h1>
+    <p class="text-[18px] text-ink-muted-light dark:text-ink-muted leading-[1.6] mb-14 tracking-tight-title">
+      {lede}
+    </p>
+
+    <section class="mt-14 pt-8 border-t border-ink-hairline-light dark:border-ink-hairline">
+      <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-6">
+        Experience
+      </h2>
+      {work.map((w) => (
+        <div class="grid grid-cols-[96px_1fr] gap-6 py-3 pb-5">
+          <div class="text-[12.5px] text-ink-muted-light dark:text-ink-muted tabular">
+            {w.start} — {w.end}
+          </div>
+          <div>
+            <h3 class="text-[16px] font-semibold tracking-tight-title">{w.company}</h3>
+            <p class="text-[13px] text-ink-muted-light dark:text-ink-muted mb-2">{w.role}</p>
+            {w.summary && <p class="text-[13.5px] leading-[1.65] opacity-90">{w.summary}</p>}
+            {w.stack && w.stack.length > 0 && (
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                {w.stack.map((s) => (
+                  <span class="text-[10.5px] px-2 py-0.5 rounded-full bg-ink-hairline-light dark:bg-ink-hairline opacity-80">
+                    {s}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </section>
+
+    {education.length > 0 && (
+      <section class="mt-14 pt-8 border-t border-ink-hairline-light dark:border-ink-hairline">
+        <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-6">
+          Education
+        </h2>
+        {education.map((e) => (
+          <div class="grid grid-cols-[96px_1fr] gap-6 py-3 pb-5">
+            <div class="text-[12.5px] text-ink-muted-light dark:text-ink-muted tabular">
+              {e.start} — {e.end}
+            </div>
+            <div>
+              <h3 class="text-[16px] font-semibold tracking-tight-title">{e.school}</h3>
+              <p class="text-[13px] text-ink-muted-light dark:text-ink-muted">{e.degree}</p>
+            </div>
+          </div>
+        ))}
+      </section>
+    )}
+
+    {projects.length > 0 && (
+      <section class="mt-14 pt-8 border-t border-ink-hairline-light dark:border-ink-hairline">
+        <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-6">
+          Selected Projects
+        </h2>
+        {projects.map((p) => (
+          <div class="py-4 border-b border-ink-hairline-light dark:border-ink-hairline last:border-b-0">
+            <div class="flex justify-between items-baseline mb-1">
+              <h3 class="text-[15px] font-semibold tracking-tight-title">{p.name}</h3>
+              <span class="text-[11px] text-ink-muted-light dark:text-ink-muted tabular">{p.year}</span>
+            </div>
+            <p class="text-[13px] text-ink-muted-light dark:text-ink-muted leading-[1.55]">{p.description}</p>
+          </div>
+        ))}
+      </section>
+    )}
+
+    <section class="mt-14 pt-8 border-t border-ink-hairline-light dark:border-ink-hairline">
+      <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-6">
+        Elsewhere
+      </h2>
+      <div class="grid grid-cols-2 gap-3.5">
+        <a href={`mailto:${email}`} class="block p-4 rounded-xl bg-ink-hairline-light/50 dark:bg-ink-hairline/50 border border-ink-hairline-light dark:border-ink-hairline">
+          <div class="text-[10px] uppercase tracking-[0.1em] text-ink-muted-light dark:text-ink-muted mb-1.5">Email</div>
+          <div class="text-[13.5px]">{email}</div>
+        </a>
+        {elsewhere.map((l) => (
+          <a href={l.href} class="block p-4 rounded-xl bg-ink-hairline-light/50 dark:bg-ink-hairline/50 border border-ink-hairline-light dark:border-ink-hairline">
+            <div class="text-[10px] uppercase tracking-[0.1em] text-ink-muted-light dark:text-ink-muted mb-1.5">{l.label}</div>
+            <div class="text-[13.5px]">{l.href.replace(/^https?:\/\//, '')}</div>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
