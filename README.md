@@ -1,43 +1,62 @@
-# Astro Starter Kit: Minimal
+# RayWooSeokSuh
 
-```sh
-pnpm create astro@latest -- --template minimal
+Personal site (wooseok.dev) — blog and career page. Built with Astro.
+
+## Develop
+
+```bash
+pnpm install
+pnpm dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Open <http://localhost:4321>.
 
-## 🚀 Project Structure
+## Build
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+pnpm astro check
+pnpm build
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Add a post
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Drop a file into `src/content/posts/`:
 
-Any static assets, like images, can be placed in the `public/` directory.
+```mdx
+---
+title: "Post title"
+subtitle: "Optional subtitle"
+date: 2026-05-20
+category: ios   # ios | ai | cs | career | notes
+tags: [swiftui, animation]
+draft: false
+---
 
-## 🧞 Commands
+Post body in MDX...
+```
 
-All commands are run from the root of the project, from a terminal:
+## Update career facts
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `pnpm install`             | Installs dependencies                            |
-| `pnpm dev`             | Starts local dev server at `localhost:4321`      |
-| `pnpm build`           | Build your production site to `./dist/`          |
-| `pnpm preview`         | Preview your build locally, before deploying     |
-| `pnpm astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `pnpm astro -- --help` | Get help using the Astro CLI                     |
+Edit `src/data/profile.ts`. The sidebar and About page read from this module.
 
-## 👀 Want to learn more?
+## Deploy
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Pushes to `main` deploy to Vercel automatically.
+
+## Structure
+
+- `src/pages/` — routes
+- `src/layouts/` — page shells
+- `src/components/` — UI building blocks
+- `src/content/posts/` — writing (MDX)
+- `src/data/profile.ts` — career data
+- `src/styles/global.css` — Tailwind v4 theme tokens + base styles
+- `src/content.config.ts` — content collection schema
+
+## Tech
+
+Astro 6 (content layer API), Tailwind v4, MDX, Vercel hosting, Vercel Web Analytics, Shiki code highlight, system fonts (SF Pro / SF Mono).
+
+## License
+
+Code: MIT. Content: All rights reserved.
