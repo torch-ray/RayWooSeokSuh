@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <text x="80" y="320" font-family="-apple-system, system-ui, sans-serif"
+        font-size="84" font-weight="700" fill="#e8e8e8" letter-spacing="-2">
+    wooseok.dev
+  </text>
+  <text x="80" y="400" font-family="-apple-system, system-ui, sans-serif"
+        font-size="32" font-weight="400" fill="#8a8a8a">
+    Writing on iOS, AI, CS, and figuring things out.
+  </text>
+</svg>
