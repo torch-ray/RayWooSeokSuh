@@ -1,0 +1,43 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import PostList from '../../components/PostList.astro';
+import { CATEGORIES, CATEGORY_LABELS, type Category } from '../../content.config';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('posts', ({ data }) => !data.draft);
+
+  return CATEGORIES.map((category) => {
+    const posts = allPosts
+      .filter((p) => p.data.category === category)
+      .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+    return {
+      params: { category },
+      props: { category, posts },
+    };
+  });
+}
+
+type Props = {
+  category: Category;
+  posts: Awaited<ReturnType<typeof getCollection<'posts'>>>;
+};
+
+const { category, posts } = Astro.props as Props;
+const label = CATEGORY_LABELS[category];
+---
+
+<BaseLayout title={`${label} writing`}>
+  <SiteNav />
+  <main id="main" class="mx-auto max-w-page px-6 sm:px-8 pt-12 pb-20">
+    <a href="/" class="text-[12px] text-ink-muted-light dark:text-ink-muted hover:text-ink-fg-light dark:hover:text-ink-fg">
+      ← All writing
+    </a>
+    <h1 class="mt-4 mb-1 text-[28px] font-bold tracking-tight-display">{label}</h1>
+    <p class="text-[13px] text-ink-muted-light dark:text-ink-muted mb-10">
+      {posts.length} {posts.length === 1 ? 'post' : 'posts'}
+    </p>
+    <PostList posts={posts} />
+  </main>
+</BaseLayout>
