@@ -1,0 +1,34 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts', ({ data }) => !data.draft);
+  const sorted = posts.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+  return sorted.map((post, index) => ({
+    params: { slug: post.id },
+    props: {
+      post,
+      next: sorted[index - 1],
+      prev: sorted[index + 1],
+    },
+  }));
+}
+
+type Props = {
+  post: CollectionEntry<'posts'>;
+  prev?: CollectionEntry<'posts'>;
+  next?: CollectionEntry<'posts'>;
+};
+
+const { post, prev, next } = Astro.props as Props;
+const { Content } = await render(post);
+
+const wordCount = (post.body ?? '').trim().split(/\s+/).filter(Boolean).length;
+const readingTimeMinutes = Math.max(1, Math.round(wordCount / 220));
+---
+
+<PostLayout post={post} readingTimeMinutes={readingTimeMinutes} prev={prev} next={next}>
+  <Content />
+</PostLayout>

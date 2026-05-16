@@ -1,0 +1,108 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import { CATEGORY_LABELS } from '../content.config';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+  readingTimeMinutes: number;
+  prev?: CollectionEntry<'posts'>;
+  next?: CollectionEntry<'posts'>;
+}
+
+const { post, readingTimeMinutes, prev, next } = Astro.props;
+const { title, subtitle, date, category } = post.data;
+const dateStr = date
+  .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+  .toUpperCase();
+---
+
+<BaseLayout title={title} description={subtitle ?? title}>
+  <SiteNav />
+  <main id="main" class="mx-auto max-w-reading px-6 sm:px-8 pt-16 pb-20">
+    <div class="flex gap-3.5 text-[12px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-4">
+      <span class="tabular">{dateStr}</span>
+      <span>·</span>
+      <span>{CATEGORY_LABELS[category]}</span>
+      <span>·</span>
+      <span>{readingTimeMinutes} min read</span>
+    </div>
+    <h1 class="text-[34px] font-bold tracking-tight-display leading-[1.15] mb-3.5">
+      {title}
+    </h1>
+    {subtitle && (
+      <p class="text-[17px] text-ink-muted-light dark:text-ink-muted leading-snug mb-12 tracking-tight-title">
+        {subtitle}
+      </p>
+    )}
+
+    <article class="prose-content text-[16.5px] leading-[1.72]">
+      <slot />
+    </article>
+
+    {(prev || next) && (
+      <footer class="mt-16 pt-7 border-t border-ink-hairline-light dark:border-ink-hairline flex justify-between gap-8 text-[13px]">
+        <div>
+          {next && (
+            <a href={`/posts/${next.id}/`} class="block">
+              <span class="block text-[10px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-1">Next</span>
+              <span>{next.data.title}</span>
+            </a>
+          )}
+        </div>
+        <div class="text-right">
+          {prev && (
+            <a href={`/posts/${prev.id}/`} class="block">
+              <span class="block text-[10px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-1">Prev</span>
+              <span>{prev.data.title}</span>
+            </a>
+          )}
+        </div>
+      </footer>
+    )}
+  </main>
+</BaseLayout>
+
+<style is:global>
+  .prose-content p { margin-bottom: 1.375rem; opacity: 0.88; }
+  .prose-content h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; margin: 3rem 0 1rem; line-height: 1.25; }
+  .prose-content a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 0.5px; }
+
+  /* Inline code, pre, blockquote use prefers-color-scheme directly
+     because the project uses Tailwind darkMode by media (no .dark class). */
+  .prose-content code:not(pre code) {
+    font-family: var(--font-mono, "SF Mono", ui-monospace, Menlo, monospace);
+    font-size: 0.875em;
+    background: rgba(0,0,0,0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .prose-content code:not(pre code) { background: rgba(255,255,255,0.08); }
+  }
+  .prose-content pre {
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+  @media (prefers-color-scheme: dark) {
+    .prose-content pre { border-color: rgba(255,255,255,0.08); }
+  }
+  .prose-content blockquote {
+    border-left: 2px solid rgba(0,0,0,0.25);
+    padding: 4px 0 4px 18px;
+    margin: 1.75rem 0;
+    opacity: 0.7;
+    font-style: italic;
+  }
+  @media (prefers-color-scheme: dark) {
+    .prose-content blockquote { border-left-color: rgba(255,255,255,0.25); }
+  }
+  .prose-content ul, .prose-content ol { padding-left: 1.4rem; margin-bottom: 1.375rem; }
+  .prose-content li { margin-bottom: 0.4rem; }
+</style>
