@@ -39,14 +39,14 @@ export interface Profile {
 }
 
 export const profile: Profile = {
-  name: 'Wooseok Suh',
+  name: 'Ray WooSeok Suh',
   role: 'iOS Engineer',
   lede:
     'iOS engineer based in Seoul. Currently building the Baemin app — Korea\'s largest food delivery service — with a focus on SwiftUI, modular architecture, and the parts of the codebase that everyone else avoids.',
   now: {
     company: 'Woowa Brothers (Baemin)',
     role: 'iOS Engineer',
-    start: '2023',
+    start: '2021',
     end: 'Present',
     summary:
       'Working on the time-sale and order detail features. Migrated legacy UIKit modules to SwiftUI, wrote the new logging layer.',
@@ -62,9 +62,9 @@ export const profile: Profile = {
     // TODO: add 2-5 selected projects
   ],
   elsewhere: [
-    { label: 'GitHub', href: 'https://github.com/' },
-    { label: 'LinkedIn', href: 'https://linkedin.com/in/' },
-    { label: 'X', href: 'https://x.com/' },
+    { label: 'GitHub', href: 'https://github.com/torch-ray' },
+    { label: 'LinkedIn', href: 'https://www.linkedin.com/in/wooseok-suh-2655b6232/' },
+    { label: 'X', href: 'https://x.com/ray_dev_suh' },
   ],
   email: 'hi@wooseok.dev',
 };
