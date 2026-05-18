@@ -1,0 +1,50 @@
+---
+title: "The Harnesses That Will Disappear, and the Harnesses That Will Endure"
+subtitle: "What to build, and what not to build, in the age of coding agents."
+date: 2026-05-18
+category: ai
+tags: [harness, agents, bitter-lesson, claude-code]
+---
+
+The coding agents we use every day — Claude Code, Cursor, Codex — are, at their core, surprisingly simple things: an LLM plus a harness. The LLM is the brain. The harness is the body that lets that brain actually do work. It's the system prompt that defines how the model behaves, the tools that let it read files and run commands, the loop that maintains conversation state, the machinery that manages context windows and token caches. The same GPT-5.5 scores 61.5% in OpenAI's Codex harness and 87.2% in Cursor's. Same brain, different body, very different outcomes.
+
+The complication is that these coding agents are evolving at terrifying speed. Tasks that demanded carefully hand-crafted pipelines a year ago now resolve in a single prompt. Vercel reported that removing 80% of the tools they'd wired into their agent actually improved it — fewer steps, fewer tokens, faster responses. A late-2025 Stanford HAI study was even more blunt: once you're past a reasonable baseline, further prompt refinement improves output quality by less than 3%.
+
+### The Bitter Lesson, one level up
+
+What we're watching is Richard Sutton's Bitter Lesson play out, almost verbatim, one level up the stack. Sutton's line, distilled: throughout AI's history, hand-crafted structure has consistently lost to general methods that scale with compute and data. The clever workarounds we built to paper over the model's weaknesses — the elaborate system prompts, the "think step by step" nudges, the painstaking tool decompositions — get absorbed into the next model release. The harness you carefully built yesterday becomes the friction that drags down the same coding agent today.
+
+### Where the model stops
+
+So is harness engineering a fool's errand? No. Because there's an entire class of knowledge the model cannot learn, no matter how many parameters or tokens you throw at it. Your company's internal wiki. Your team's code conventions. Your industry's regulations. Who is authorized to approve what. Which actions a human needs to sign off on. None of this lives inside the model, and none of it ever will. As models gain more autonomy, deciding the limits of that autonomy — and verifying its outputs — becomes more important, not less.
+
+### The harness splits in two
+
+The conclusion, then, is simple. The harness doesn't disappear. It splits into two.
+
+One kind is the harness that compensates for the model's weaknesses. This kind is on borrowed time. As the model improves, the workaround gets absorbed. If you're going to build this kind, build it to be ripped out — keep it thin, keep the seams clean, never get attached.
+
+The other kind is the harness that wires the model into your organization and environment. Internal tools, proprietary data, permissions, approval workflows, domain expertise. This kind doesn't shrink as the model gets smarter; if anything, it grows, because a smarter, more autonomous agent needs a richer set of guardrails, a richer map of where it's allowed to operate.
+
+### The question to keep asking
+
+If you're building harness today, the question to keep asking yourself is this: am I patching a weakness the model is about to fix on its own, or am I bridging the model to something it can never learn? If it's the former, build it thin and disposable. If it's the latter, you're building a real asset.
+
+Jarvis isn't Jarvis because the underlying model is brilliant. Jarvis is Jarvis because of the vast harness infrastructure around it — the suit, the house, the weapons systems, the data, the permissions to act on all of them. Jarvis is not the end of harness engineering. Jarvis is its destination.
+
+### References
+
+1. Sutton, R. (2019). [The Bitter Lesson](http://www.incompleteideas.net/IncIdeas/BitterLesson.html).
+2. Willison, S. (2026). [How coding agents work — Agentic Engineering Patterns](https://simonwillison.net/guides/agentic-engineering-patterns/how-coding-agents-work/).
+3. Willison, S. (2026). [Agentic Engineering Patterns (guide series)](https://simonwillison.net/guides/agentic-engineering-patterns/).
+4. Karpathy, A. (2026). [Sequoia Ascent 2026 summary](https://karpathy.bearblog.dev/sequoia-ascent-2026/).
+5. The New Stack (2026). [Anthropic, OpenAI, Google, and Microsoft agree that the harness is the product. They disagree on the price](https://thenewstack.io/ai-agent-harness-pricing-split/).
+6. MindStudio (2026). [Agent Harnesses Beat Model Upgrades: 5 Benchmarks That Prove the Harness Is Now the Product](https://www.mindstudio.ai/blog/agent-harnesses-beat-model-upgrades-5-benchmarks).
+7. Bowne-Anderson, H. (2026). [AI Agent Harness, 3 Principles for Context Engineering, and the Bitter Lesson Revisited](https://hugobowne.substack.com/p/ai-agent-harness-3-principles-for).
+8. Pham, M. (2026). [Why Most Agent Harnesses Are Not Bitter Lesson Pilled](https://x.com/buckeyevn/status/2014171253045960803).
+9. Perez, C. E. (2026). [The Invisible Architecture: Harness Engineering and the Future of Agentic AI](https://medium.com/intuitionmachine/the-invisible-architecture-harness-engineering-and-the-future-of-agentic-ai-e8699a63c1a3). Intuition Machine.
+10. Lee, H. C. (2026). [Hidden Technical Debt of AI Systems: Agent Harness](https://leehanchung.github.io/blogs/2026/05/08/hidden-technical-debt-agent-harness/).
+11. OpenAI (2026). [Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering/).
+12. Schmid, P. (2026). [The importance of Agent Harness in 2026](https://www.philschmid.de/agent-harness-2026).
+13. Epsilla Blog (2026). [The Third Evolution: Why Harness Engineering Replaced Prompting in 2026](https://www.epsilla.com/blogs/harness-engineering-evolution-prompt-context-autonomous-agents).
+14. Orosz, G. (2026). [The impact of AI on software engineers in 2026](https://newsletter.pragmaticengineer.com/p/the-impact-of-ai-on-software-engineers-2026). Pragmatic Engineer.
