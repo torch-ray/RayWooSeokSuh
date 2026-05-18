@@ -1,12 +1,14 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { CATEGORY_LABELS } from '../content.config';
+import { entrySlug, postUrl, type PostLang } from '../lib/posts';
 
 interface Props {
   posts: CollectionEntry<'posts'>[];
+  lang: PostLang;
 }
 
-const { posts } = Astro.props;
+const { posts, lang } = Astro.props;
 
 // Group by year, descending
 const byYear = posts.reduce<Record<number, CollectionEntry<'posts'>[]>>((acc, p) => {
@@ -34,7 +36,7 @@ const fmt = (d: Date) =>
         .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
         .map((post) => (
           <a
-            href={`/posts/${post.id}/`}
+            href={postUrl(lang, entrySlug(post))}
             class="grid grid-cols-[56px_1fr_auto] gap-5 items-baseline py-2 text-[13.5px] hover:bg-ink-hairline-light/40 dark:hover:bg-ink-hairline/40 -mx-2 px-2 rounded transition-colors"
           >
             <span class="text-[11px] text-ink-muted-light dark:text-ink-muted tabular">

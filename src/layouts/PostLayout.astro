@@ -1,7 +1,9 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
+import LangToggle from '../components/LangToggle.astro';
 import { CATEGORY_LABELS } from '../content.config';
+import { entrySlug, postUrl, type PostLang } from '../lib/posts';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -9,24 +11,43 @@ interface Props {
   readingTimeMinutes: number;
   prev?: CollectionEntry<'posts'>;
   next?: CollectionEntry<'posts'>;
+  lang: PostLang;
+  /** Path of the sibling post in the other language, if one exists. */
+  altPath?: string;
 }
 
-const { post, readingTimeMinutes, prev, next } = Astro.props;
+const { post, readingTimeMinutes, prev, next, lang, altPath } = Astro.props;
 const { title, subtitle, date, category } = post.data;
 const dateStr = date
   .toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
   .toUpperCase();
+const altLang: PostLang = lang === 'en' ? 'ko' : 'en';
+const readLabel = lang === 'ko' ? '분 분량' : 'min read';
+const nextLabel = lang === 'ko' ? '다음' : 'Next';
+const prevLabel = lang === 'ko' ? '이전' : 'Prev';
 ---
 
-<BaseLayout title={title} description={subtitle ?? title}>
+<BaseLayout
+  title={title}
+  description={subtitle ?? title}
+  lang={lang}
+  altLang={altPath ? altLang : undefined}
+  altPath={altPath}
+>
   <SiteNav />
   <main id="main" class="mx-auto max-w-reading px-6 sm:px-8 pt-16 pb-20">
-    <div class="flex gap-3.5 text-[12px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-4">
+    <div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 text-[12px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-4">
       <span class="tabular">{dateStr}</span>
       <span>·</span>
       <span>{CATEGORY_LABELS[category]}</span>
       <span>·</span>
-      <span>{readingTimeMinutes} min read</span>
+      <span>{readingTimeMinutes} {readLabel}</span>
+      {altPath && (
+        <>
+          <span>·</span>
+          <LangToggle currentLang={lang} otherUrl={altPath} />
+        </>
+      )}
     </div>
     <h1 class="text-[34px] font-bold tracking-tight-display leading-[1.15] mb-3.5">
       {title}
@@ -45,16 +66,16 @@ const dateStr = date
       <footer class="mt-16 pt-7 border-t border-ink-hairline-light dark:border-ink-hairline flex justify-between gap-8 text-[13px]">
         <div>
           {next && (
-            <a href={`/posts/${next.id}/`} class="block">
-              <span class="block text-[10px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-1">Next</span>
+            <a href={postUrl(lang, entrySlug(next))} class="block">
+              <span class="block text-[10px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-1">{nextLabel}</span>
               <span>{next.data.title}</span>
             </a>
           )}
         </div>
         <div class="text-right">
           {prev && (
-            <a href={`/posts/${prev.id}/`} class="block">
-              <span class="block text-[10px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-1">Prev</span>
+            <a href={postUrl(lang, entrySlug(prev))} class="block">
+              <span class="block text-[10px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-1">{prevLabel}</span>
               <span>{prev.data.title}</span>
             </a>
           )}

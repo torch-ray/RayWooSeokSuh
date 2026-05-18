@@ -1,25 +1,27 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import Sidebar from '../components/Sidebar.astro';
 import PostList from '../components/PostList.astro';
+import LangToggle from '../components/LangToggle.astro';
+import { getPostsByLang } from '../lib/posts';
 
-const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
-);
+const posts = await getPostsByLang('en');
 ---
 
-<BaseLayout title="Ray Suh">
+<BaseLayout title="Ray Suh" altLang="ko" altPath="/ko/">
   <SiteNav />
   <main id="main" class="mx-auto max-w-page px-6 sm:px-8 pt-12 pb-20">
     <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-12">
       <Sidebar />
       <section>
-        <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-4">
-          Writing
-        </h2>
-        <PostList posts={posts} />
+        <div class="flex items-baseline justify-between mb-4">
+          <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted">
+            Writing
+          </h2>
+          <LangToggle currentLang="en" otherUrl="/ko/" />
+        </div>
+        <PostList posts={posts} lang="en" />
       </section>
     </div>
   </main>

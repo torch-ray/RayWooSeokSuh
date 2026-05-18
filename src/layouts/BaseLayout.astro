@@ -8,6 +8,11 @@ interface Props {
   description?: string;
   ogImage?: string;
   canonicalUrl?: string;
+  /** If this page has a sibling in another language, set the lang code and the path. */
+  altLang?: 'en' | 'ko';
+  altPath?: string;
+  /** Page language (defaults to 'en' since most of the site is English). */
+  lang?: 'en' | 'ko';
 }
 
 const {
@@ -15,16 +20,20 @@ const {
   description = 'Writing on iOS, AI, CS, and the things I am figuring out along the way.',
   ogImage = '/og-default.svg',
   canonicalUrl,
+  altLang,
+  altPath,
+  lang = 'en',
 } = Astro.props;
 
 const siteName = 'Ray Suh';
 const fullTitle = title === siteName ? title : `${title} · ${siteName}`;
 const canonical = canonicalUrl ?? new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageUrl = new URL(ogImage, Astro.site).toString();
+const altUrl = altPath ? new URL(altPath, Astro.site).toString() : undefined;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -42,6 +51,7 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:locale" content={lang === 'ko' ? 'ko_KR' : 'en_US'} />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -49,7 +59,18 @@ const ogImageUrl = new URL(ogImage, Astro.site).toString();
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageUrl} />
 
-    <link rel="alternate" type="application/rss+xml" title={siteName} href="/rss.xml" />
+    <!-- hreflang alternates -->
+    {altLang && altUrl && (
+      <link rel="alternate" hreflang={altLang} href={altUrl} />
+    )}
+    {altLang && altUrl && (
+      <link rel="alternate" hreflang={lang} href={canonical} />
+    )}
+    {altLang && altUrl && (
+      <link rel="alternate" hreflang="x-default" href={lang === 'en' ? canonical : altUrl} />
+    )}
+
+    <link rel="alternate" type="application/rss+xml" title={siteName} href={lang === 'ko' ? '/ko/rss.xml' : '/rss.xml'} />
 
     <ClientRouter />
   </head>

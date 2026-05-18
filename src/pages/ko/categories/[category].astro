@@ -1,13 +1,13 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteNav from '../../components/SiteNav.astro';
-import PostList from '../../components/PostList.astro';
-import LangToggle from '../../components/LangToggle.astro';
-import { CATEGORIES, CATEGORY_LABELS, type Category } from '../../content.config';
-import { getPostsByLang, categoryUrl } from '../../lib/posts';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteNav from '../../../components/SiteNav.astro';
+import PostList from '../../../components/PostList.astro';
+import LangToggle from '../../../components/LangToggle.astro';
+import { CATEGORIES, CATEGORY_LABELS, type Category } from '../../../content.config';
+import { getPostsByLang, categoryUrl } from '../../../lib/posts';
 
 export async function getStaticPaths() {
-  const allPosts = await getPostsByLang('en');
+  const allPosts = await getPostsByLang('ko');
   return CATEGORIES.map((category) => {
     const posts = allPosts
       .filter((p) => p.data.category === category)
@@ -26,22 +26,22 @@ type Props = {
 
 const { category, posts } = Astro.props as Props;
 const label = CATEGORY_LABELS[category];
-const altPath = categoryUrl('ko', category);
+const altPath = categoryUrl('en', category);
 ---
 
-<BaseLayout title={`${label} writing`} altLang="ko" altPath={altPath}>
+<BaseLayout title={`${label} writing`} lang="ko" altLang="en" altPath={altPath}>
   <SiteNav />
   <main id="main" class="mx-auto max-w-page px-6 sm:px-8 pt-12 pb-20">
     <div class="flex items-baseline justify-between">
-      <a href="/" class="text-[12px] text-ink-muted-light dark:text-ink-muted hover:text-ink-fg-light dark:hover:text-ink-fg">
+      <a href="/ko/" class="text-[12px] text-ink-muted-light dark:text-ink-muted hover:text-ink-fg-light dark:hover:text-ink-fg">
         ← All writing
       </a>
-      <LangToggle currentLang="en" otherUrl={altPath} />
+      <LangToggle currentLang="ko" otherUrl={altPath} />
     </div>
     <h1 class="mt-4 mb-1 text-[28px] font-bold tracking-tight-display">{label}</h1>
     <p class="text-[13px] text-ink-muted-light dark:text-ink-muted mb-10">
       {posts.length} {posts.length === 1 ? 'post' : 'posts'}
     </p>
-    <PostList posts={posts} lang="en" />
+    <PostList posts={posts} lang="ko" />
   </main>
 </BaseLayout>

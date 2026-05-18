@@ -1,0 +1,32 @@
+---
+import type { PostLang } from '../lib/posts';
+
+interface Props {
+  currentLang: PostLang;
+  /** Where to navigate when the user toggles to the other language. */
+  otherUrl: string;
+  /** Optional class overrides for the wrapper. */
+  class?: string;
+}
+
+const { currentLang, otherUrl, class: className = '' } = Astro.props;
+
+const labels = {
+  en: { current: 'EN', other: '한국어', otherAria: 'Read in Korean' },
+  ko: { current: '한국어', other: 'EN', otherAria: '영어로 보기' },
+} as const;
+
+const label = labels[currentLang];
+---
+
+<span class:list={['inline-flex items-baseline gap-1.5 text-[11px]', className]}>
+  <span class="text-ink-muted-light/70 dark:text-ink-muted/70 uppercase tracking-[0.05em]">{label.current}</span>
+  <span class="text-ink-muted-light/40 dark:text-ink-muted/40">·</span>
+  <a
+    href={otherUrl}
+    class="text-ink-muted-light dark:text-ink-muted hover:text-ink-fg-light dark:hover:text-ink-fg transition-colors uppercase tracking-[0.05em]"
+    aria-label={label.otherAria}
+  >
+    {label.other}
+  </a>
+</span>

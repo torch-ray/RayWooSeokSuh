@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteNav from '../../components/SiteNav.astro';
+import Sidebar from '../../components/Sidebar.astro';
+import PostList from '../../components/PostList.astro';
+import LangToggle from '../../components/LangToggle.astro';
+import { getPostsByLang } from '../../lib/posts';
+
+const posts = await getPostsByLang('ko');
+---
+
+<BaseLayout title="Ray Suh" lang="ko" altLang="en" altPath="/">
+  <SiteNav />
+  <main id="main" class="mx-auto max-w-page px-6 sm:px-8 pt-12 pb-20">
+    <div class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-12">
+      <Sidebar />
+      <section>
+        <div class="flex items-baseline justify-between mb-4">
+          <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted">
+            Writing
+          </h2>
+          <LangToggle currentLang="ko" otherUrl="/" />
+        </div>
+        <PostList posts={posts} lang="ko" />
+      </section>
+    </div>
+  </main>
+</BaseLayout>

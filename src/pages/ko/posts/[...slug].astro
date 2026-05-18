@@ -1,10 +1,10 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
-import PostLayout from '../../layouts/PostLayout.astro';
-import { getPostsByLang, entrySlug, siblingExists, postUrl } from '../../lib/posts';
+import PostLayout from '../../../layouts/PostLayout.astro';
+import { getPostsByLang, entrySlug, siblingExists, postUrl } from '../../../lib/posts';
 
 export async function getStaticPaths() {
-  const posts = await getPostsByLang('en');
+  const posts = await getPostsByLang('ko');
   return posts.map((post, index) => ({
     params: { slug: entrySlug(post) },
     props: {
@@ -28,8 +28,8 @@ const wordCount = (post.body ?? '').trim().split(/\s+/).filter(Boolean).length;
 const readingTimeMinutes = Math.max(1, Math.round(wordCount / 220));
 
 const slug = entrySlug(post);
-const hasKorean = await siblingExists(slug, 'ko');
-const altPath = hasKorean ? postUrl('ko', slug) : undefined;
+const hasEnglish = await siblingExists(slug, 'en');
+const altPath = hasEnglish ? postUrl('en', slug) : undefined;
 ---
 
 <PostLayout
@@ -37,7 +37,7 @@ const altPath = hasKorean ? postUrl('ko', slug) : undefined;
   readingTimeMinutes={readingTimeMinutes}
   prev={prev}
   next={next}
-  lang="en"
+  lang="ko"
   altPath={altPath}
 >
   <Content />
