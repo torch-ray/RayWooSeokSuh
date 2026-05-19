@@ -1,0 +1,38 @@
+---
+title: "Is LLM Scaling Hitting a Wall?"
+subtitle: "Yann LeCun and the World Model debate."
+date: 2026-05-19
+category: ai
+tags: [llm, world-model, lecun, scaling]
+---
+
+In November 2025, Yann LeCun — Meta's Chief AI Scientist and one of the godfathers of deep learning — stepped away from the company to launch a new Paris-based startup called AMI Labs. The fact that a company with no product secured a $3.5 billion valuation tells you everything about how hungry the market is for a "post-LLM" paradigm. LeCun's message has been consistent for years: *"LLMs cannot reach human-level intelligence. Real intelligence will come from World Models."*
+
+### The two camps
+
+The AI industry today splits into two camps. On one side are the scaling believers — OpenAI, Anthropic, Google — who follow the empirical observation that bigger data, more parameters, and more compute keep producing more capability. They're pouring hundreds of billions of dollars into infrastructure on the back of that bet. As pretraining curves have started to flatten, they've found new axes — reinforcement learning, test-time compute, agentic loops — to keep the curve climbing. On the other side stand skeptics like LeCun and Gary Marcus, who argue that autoregressive next-token prediction is fundamentally ill-suited for reasoning or planning. Text, they insist, is a human-compressed artifact of reality; you cannot recover the world's physical causality from it.
+
+### What a world model actually is
+
+Enter the World Model. A world model is, simply put, *an AI's internal simulator of how the world works*. Just as a human mentally simulates the trajectory of their hand before reaching for a cup, the model predicts internally: *"if I take this action, this is what happens next."* Mathematically, while an LLM learns `p(next token | previous tokens)`, a world model learns `p(next state | current state, action)`. **That single shift — making action a core input — transforms the model from pure pattern matching into a system capable of hypothetical simulation.**
+
+Implementations vary widely. Dreamer-style models roll time forward step by step in a latent space. LeCun's preferred approach, JEPA (Joint Embedding Predictive Architecture), predicts futures in an abstract embedding space rather than at the pixel level. Diffusion models like Sora and GAIA-2, and token-based models like Genie, also fall under the broader world-model umbrella. Mechanically, some of them resemble LLMs. But the decisive difference is the training data: instead of human-written text, world models learn from *(observation, action, next observation)* triples gathered through interaction with real environments. The representations etched into the weights end up qualitatively different.
+
+### Can scaling alone solve it?
+
+A natural counter-question follows: *"What if we just feed an LLM enough video — wouldn't it eventually learn physics?"* In principle, yes, it might. The Transformer — the backbone of every modern LLM — is, with enough scale, capable of approximating virtually any function, and OpenAI has marketed Sora as a "world simulator." But when you examine Sora's outputs frame by frame, the same *structural* failures appear over and over: objects pass through each other, mass isn't conserved, fluids defy hydrodynamics. What the model has actually learned is visual plausibility, not physical correctness.
+
+The pure-scaling path runs into three layers of walls. **First, a quantitative limit** — the sheer amount of compute and data required. **Second, a limit on the kind of data**: video is a 2D projection of a 3D world, and in principle you cannot fully recover physics from 2D pixels alone. You need multimodal signals — depth, force feedback, robotic actions. **Third, an architectural limit**: autoregressive pixel prediction accumulates errors over time and wastes model capacity on irrelevant visual detail. Given the same compute budget, an architecture like JEPA that predicts abstract representations is dramatically more efficient.
+
+### The hybrid endpoint
+
+The destination is most likely a hybrid. A world model runs the physics simulation in latent space; an LLM interprets the result in natural language and acts as the interface with the user. NVIDIA's GR00T, DeepMind's Gemini Robotics, and Physical Intelligence's π0 are heading exactly in that direction. The language and knowledge domains will likely remain LLM territory, while robotics and autonomous driving — the embodied domains — belong to world models. The two paradigms complement rather than replace each other.
+
+### What to watch
+
+LeCun's prediction that *"no sane person will use today's LLMs three to five years from now"* is almost certainly an overstatement. But his core proposition — *"text statistics alone are not enough"* — stands a good chance of becoming conventional wisdom within five years. Investing in LLMs and agents right now is rational, but the signal is unmistakable: multimodal, embodied, simulation-based learning is the next inflection point. AMI Labs, V-JEPA, NVIDIA Cosmos — these are names worth keeping in your peripheral vision.
+
+### Sources
+
+- [Yann LeCun Launches AMI Labs at $3.5B Valuation: The Beginning of World Models Beyond LLMs — Royfactory](https://royzero.tistory.com/entry/yann-lecun-ami-labs-world-models-startup)
+- ['AI Pioneer' Yann LeCun Leaves Meta: "LLMs Have No Future" — PADO](https://www.pado.kr/article/2025112111028857965)
