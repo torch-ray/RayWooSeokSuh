@@ -39,7 +39,7 @@ const prevLabel = lang === 'ko' ? '이전' : 'Prev';
     <div class="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 text-[12px] uppercase tracking-[0.05em] text-ink-muted-light dark:text-ink-muted mb-4">
       <span class="tabular">{dateStr}</span>
       <span>·</span>
-      <span>{CATEGORY_LABELS[category]}</span>
+      <span class="normal-case">{CATEGORY_LABELS[category]}</span>
       <span>·</span>
       <span>{readingTimeMinutes} {readLabel}</span>
       {altPath && (
