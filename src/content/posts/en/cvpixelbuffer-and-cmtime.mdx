@@ -1,0 +1,56 @@
+---
+title: "CVPixelBuffer is a class. CMTime is a rational."
+subtitle: "Why Apple's media APIs don't look like modern Swift."
+date: 2026-05-19
+category: ios
+tags: [swift, cvpixelbuffer, cmtime, concurrency, media]
+---
+
+iOS engineers touching Apple's media APIs for the first time tend to get caught off guard twice. Once at the fact that `CVPixelBuffer` is a class, not a struct. Again at the fact that `CMTime` is neither a `Double` nor a `TimeInterval`, but a `value/timescale` rational number. Try to layer Swift 6 actor concurrency on top and you end up reaching for `@unchecked Sendable` by hand. None of this looks like the safety story modern Swift sells.
+
+These aren't legacy APIs. They're precisely shaped by two physical constraints media imposes: *copies are expensive, and drift accumulates*.
+
+### CVPixelBuffer: copies are expensive
+
+Start with `CVPixelBuffer`. A single 4K frame at YUV 10-bit is around 16MB. At 60fps that's roughly 1GB of data flowing per second per consumer. A real pipeline has three consumers at once: the GPU draws to the screen, the Neural Engine runs model inference, the video encoder writes to disk. Treat each frame as a value and copy it by value, and you're pushing more than 3GB of memory copies per second. The device throttles on the spot.
+
+So Core Video writes the pixels once into a specific address in unified memory and hands out an 8-byte pointer to anyone who needs access — that is, it defines `CVPixelBuffer` as a reference type. Because real-time processing also needs in-place mutation (mosaic, beauty filters, watermark composition), the type isn't strictly read-only either. Mutation is gated by `CVPixelBufferLockFlags`, a read/write lock. `CVPixelBufferPool` exists for the same reason: doing `alloc`/`free` on every new frame at 60fps is itself a path to thermal throttling.
+
+### Swift 6 concurrency and `@unchecked Sendable`
+
+Layer this on top of Swift 6's concurrency model and the friction starts immediately. `CVPixelBuffer` is a mutable reference type holding raw pointers, so it isn't `Sendable`. The compiler refuses to let it cross an actor boundary.
+
+```swift
+public struct Frame: @unchecked Sendable {
+    public let pixelBuffer: CVPixelBuffer
+    public let timestamp: CMTime
+    public let depth: CVPixelBuffer?
+}
+```
+
+The trap here is *the illusion of shallow immutability*. Declaring `let pixelBuffer` inside a struct only freezes the reference itself; it does not freeze what the reference points to. A C function like `CVPixelBufferLockBaseAddress` walks straight into that memory and rewrites pixels, and the compiler has no way to know. `@unchecked Sendable` is the developer's promise that "this buffer will be treated as read-only across the pipeline" — not a guarantee the language verifies.
+
+The practical consequence is simple. The buffer must travel between actors only as part of a wrapper like `Frame`. The moment you try to pass `frame.pixelBuffer` on its own, the compiler catches it again. Wrapper-granularity transfer *is* the actor-safety boundary, drawn explicitly in your own code.
+
+### CMTime: drift accumulates
+
+If `CVPixelBuffer` is the answer on the memory axis, `CMTime` is the answer on the time axis. The same pattern, responding to a different physical constraint: *drift*. For short, one-shot measurements, `TimeInterval` (= `Double`) is light and fine. But video is a marathon. A 90-minute video at 30fps holds 162,000 frames, and each frame's PTS (presentation timestamp) accumulates from the previous one. The problem is that a value like `1.0 / 30.0` can't be represented exactly in binary floating point. Each addition introduces a tiny rounding error, and 160,000 of them compound into something the video clock and the audio clock can no longer agree on. That's the moment lip sync breaks.
+
+`CMTime` sidesteps this by being a rational number. `CMTime(value: 1, timescale: 30)` is *exactly* 1/30 second, and within a single timescale all addition reduces to integer addition — sum tens of thousands of them and the accumulated error is zero. The last frame's PTS in the 90-minute video is `CMTime(value: 161999, timescale: 30)` — plain integer arithmetic, which is why a video editor can seek to that exact frame. Apple uses `CMTime` instead of `Double` throughout its media stack not for elegance, but because the arithmetic only works one way.
+
+### What this enables
+
+What these two decisions together unlock is most visible in features like real-time auto-capture — the trick where holding an ID card inside an on-screen guide triggers a shutter without the user pressing anything. The camera pushes frames at 30fps regardless of any button state. Vision pulls one roughly every 33ms and returns a confidence score. The moment that score crosses a threshold — say `0.95` — *and* the target lands inside the guide rectangle, the code takes the shutter on the user's behalf. The dark translucent mask with a hole in the middle isn't a camera setting; the sensor is always capturing the whole room, and the mask is a `CAShapeLayer` overlay that visually steers the user's hand. The actual analysis narrowing happens through `regionOfInterest`, where the two gotchas are: coordinates are normalized to `0.0 ~ 1.0` rather than pixels, and the origin is the lower-left corner — a Y-flipped coordinate space compared to UIKit. The whole loop only feels effortless because every frame arrives zero-copy (`CVPixelBuffer`) and every timestamp lands without accumulating error (`CMTime`).
+
+### One pattern, two answers
+
+Both APIs rest on the same idea. Media is *high-volume* and *long-running*. The arithmetic isn't one frame at a time; it's tens of frames a second compounded for hours. Struct value semantics and floating-point `Double`s are both correct for short computations and wrong for long ones. Apple's media APIs simply picked the side that survives the long run.
+
+Read that backwards and it becomes a working instinct for your own code. When data is copied frequently along a hot path, reach for reference types with explicit locks. When precision compounds across a sequence, reach for rationals. When Swift 6's safety story rubs against an old C API, use the escape hatch — `@unchecked Sendable` and friends — without shame, but draw the boundary of where safety stops inside your own wrapper types. Disguising a C API as modern Swift is a recipe for failing at both. Drawing the responsibility line cleanly between them is how each one keeps doing what it's good at.
+
+### References
+
+- Apple Developer Documentation. [CVPixelBuffer](https://developer.apple.com/documentation/corevideo/cvpixelbuffer)
+- Apple Developer Documentation. [CMTime](https://developer.apple.com/documentation/coremedia/cmtime)
+- Apple Developer Documentation. [CVPixelBufferPool](https://developer.apple.com/documentation/corevideo/cvpixelbufferpool)
+- Apple Developer Documentation. [VNImageBasedRequest.regionOfInterest](https://developer.apple.com/documentation/vision/vnimagebasedrequest/2887258-regionofinterest)
