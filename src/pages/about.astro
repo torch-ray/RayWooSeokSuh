@@ -86,14 +86,22 @@ const work = [now, ...previously];
         Elsewhere
       </h2>
       <div class="grid grid-cols-2 gap-3.5">
-        <a href={`mailto:${email}`} class="block p-4 rounded-xl bg-ink-hairline-light/50 dark:bg-ink-hairline/50 border border-ink-hairline-light dark:border-ink-hairline">
-          <div class="text-[10px] uppercase tracking-[0.1em] text-ink-muted-light dark:text-ink-muted mb-1.5">Email</div>
-          <div class="text-[13.5px]">{email}</div>
+        <a
+          href={`mailto:${email}`}
+          class="group flex items-center justify-between p-4 rounded-xl bg-ink-hairline-light/50 dark:bg-ink-hairline/50 border border-ink-hairline-light dark:border-ink-hairline hover:border-ink-fg-light/30 dark:hover:border-ink-fg/30 hover:-translate-y-0.5 transition-all duration-150"
+        >
+          <span class="text-[14px]">{email}</span>
+          <span class="text-[14px] text-ink-muted-light/60 dark:text-ink-muted/60 group-hover:text-ink-fg-light dark:group-hover:text-ink-fg transition-colors">↗</span>
         </a>
         {elsewhere.map((l) => (
-          <a href={l.href} class="block p-4 rounded-xl bg-ink-hairline-light/50 dark:bg-ink-hairline/50 border border-ink-hairline-light dark:border-ink-hairline">
-            <div class="text-[10px] uppercase tracking-[0.1em] text-ink-muted-light dark:text-ink-muted mb-1.5">{l.label}</div>
-            <div class="text-[13.5px]">{l.href.replace(/^https?:\/\//, '')}</div>
+          <a
+            href={l.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="group flex items-center justify-between p-4 rounded-xl bg-ink-hairline-light/50 dark:bg-ink-hairline/50 border border-ink-hairline-light dark:border-ink-hairline hover:border-ink-fg-light/30 dark:hover:border-ink-fg/30 hover:-translate-y-0.5 transition-all duration-150"
+          >
+            <span class="text-[14px]">{l.label}</span>
+            <span class="text-[14px] text-ink-muted-light/60 dark:text-ink-muted/60 group-hover:text-ink-fg-light dark:group-hover:text-ink-fg transition-colors">↗</span>
           </a>
         ))}
       </div>
