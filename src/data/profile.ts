@@ -64,7 +64,7 @@ export const profile: Profile = {
   elsewhere: [
     { label: 'GitHub', href: 'https://github.com/torch-ray' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/wooseok-suh-2655b6232/' },
-    { label: 'X', href: 'https://x.com/ray_dev_suh' },
+    { label: 'X', href: 'https://x.com/raywooseoksuh' },
   ],
   email: 'ddarjae@naver.com',
 };
