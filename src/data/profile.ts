@@ -42,15 +42,15 @@ export const profile: Profile = {
   name: 'Ray WooSeok Suh',
   role: 'iOS Engineer',
   lede:
-    'iOS engineer based in Seoul. Currently building the Baemin app — Korea\'s largest food delivery service — with a focus on SwiftUI, modular architecture, and the parts of the codebase that everyone else avoids.',
+    'iOS engineer based in Seoul. Currently on the Baemin app — Korea\'s largest food delivery service — where my work tends to live in the deeper layers: Clean Architecture, Microfeatures with Tuist, Swift 6 migration, and the parts of the codebase most people prefer to leave alone. I\'m drawn to animations that feel right, performance work, and going down to the core when it matters.',
   now: {
     company: 'Woowa Brothers (Baemin)',
     role: 'iOS Engineer',
     start: '2021',
     end: 'Present',
     summary:
-      'Working on the time-sale and order detail features. Migrated legacy UIKit modules to SwiftUI, wrote the new logging layer.',
-    stack: ['Swift 6', 'SwiftUI', 'Tuist', 'Factory DI'],
+      'Several years on Baemin Commerce — grocery delivery (B마트, 장보기), Swift 6 migration, modularization, architectural overhaul. Recently moved to Mobile Platform, closer to the core. Now the sole iOS engineer on the task force shipping Baemin 2.0\'s fluid animation layer.',
+    stack: ['Swift 6', 'Tuist', 'Microfeatures', 'Factory DI', 'Core Animation'],
   },
   previously: [
     // TODO: fill in prior roles
