@@ -1,0 +1,23 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import PostList from '../components/PostList.astro';
+import LangToggle from '../components/LangToggle.astro';
+import { getPostsByLang } from '../lib/posts';
+
+const posts = await getPostsByLang('en');
+---
+
+<BaseLayout title="Writing" altLang="ko" altPath="/ko/writing/">
+  <SiteNav />
+  <main id="main" class="mx-auto max-w-page px-6 sm:px-8 pt-12 pb-20">
+    <div class="flex items-baseline justify-between">
+      <h1 class="text-[28px] font-bold tracking-tight-display">Writing</h1>
+      <LangToggle currentLang="en" otherUrl="/ko/writing/" />
+    </div>
+    <p class="text-[13px] text-ink-muted-light dark:text-ink-muted mt-1 mb-10">
+      {posts.length} {posts.length === 1 ? 'post' : 'posts'}
+    </p>
+    <PostList posts={posts} lang="en" />
+  </main>
+</BaseLayout>

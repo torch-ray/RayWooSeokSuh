@@ -1,9 +1,21 @@
 ---
-const links = [
-  { href: '/', label: 'Writing' },
-  { href: '/about/', label: 'About' },
-];
 const pathname = Astro.url.pathname;
+const isKo = pathname === '/ko' || pathname.startsWith('/ko/');
+const homeHref = isKo ? '/ko/' : '/';
+const writingHref = isKo ? '/ko/writing/' : '/writing/';
+
+const isWritingActive =
+  pathname === writingHref ||
+  pathname.startsWith('/posts/') ||
+  pathname.startsWith('/ko/posts/') ||
+  pathname.startsWith('/categories/') ||
+  pathname.startsWith('/ko/categories/');
+const isAboutActive = pathname === '/about/';
+
+const links = [
+  { href: writingHref, label: 'Writing', active: isWritingActive },
+  { href: '/about/', label: 'About', active: isAboutActive },
+];
 ---
 
 <header
@@ -11,7 +23,7 @@ const pathname = Astro.url.pathname;
   transition:persist
 >
   <nav class="mx-auto max-w-page px-6 sm:px-8 h-14 flex items-center justify-between">
-    <a href="/" class="font-bold tracking-tight text-[15px]" aria-label="Home">
+    <a href={homeHref} class="font-bold tracking-tight text-[15px]" aria-label="Home">
       rs
     </a>
     <ul class="flex items-center gap-5 text-[13px]">
@@ -21,7 +33,7 @@ const pathname = Astro.url.pathname;
             href={l.href}
             class:list={[
               'text-ink-muted-light dark:text-ink-muted hover:text-ink-fg-light dark:hover:text-ink-fg transition-colors',
-              { 'text-ink-fg-light dark:text-ink-fg': pathname === l.href },
+              { 'text-ink-fg-light dark:text-ink-fg': l.active },
             ]}
           >
             {l.label}
