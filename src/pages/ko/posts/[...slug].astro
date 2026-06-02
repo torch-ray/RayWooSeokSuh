@@ -1,7 +1,7 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
 import PostLayout from '../../../layouts/PostLayout.astro';
-import { getPostsByLang, entrySlug, siblingExists, postUrl } from '../../../lib/posts';
+import { getPostsByLang, entrySlug, siblingExists, postUrl, getReadingTimeMinutes } from '../../../lib/posts';
 
 export async function getStaticPaths() {
   const posts = await getPostsByLang('ko');
@@ -24,10 +24,8 @@ type Props = {
 const { post, prev, next } = Astro.props as Props;
 const { Content } = await render(post);
 
-const wordCount = (post.body ?? '').trim().split(/\s+/).filter(Boolean).length;
-const readingTimeMinutes = Math.max(1, Math.round(wordCount / 220));
-
 const slug = entrySlug(post);
+const readingTimeMinutes = await getReadingTimeMinutes(slug);
 const hasEnglish = await siblingExists(slug, 'en');
 const altPath = hasEnglish ? postUrl('en', slug) : undefined;
 ---

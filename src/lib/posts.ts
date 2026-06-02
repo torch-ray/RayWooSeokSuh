@@ -47,3 +47,16 @@ export async function siblingExists(slug: string, otherLang: PostLang): Promise<
   const all = await getCollection('posts', ({ data }) => !data.draft);
   return all.some((p) => entryLang(p) === otherLang && entrySlug(p) === slug);
 }
+
+/**
+ * Compute reading time in minutes for a post slug, based on the **English** body.
+ * Korean pages display the same number, so the figure stays consistent across translations.
+ * Falls back to whatever language exists if the English version is missing.
+ */
+export async function getReadingTimeMinutes(slug: string): Promise<number> {
+  const all = await getCollection('posts', ({ data }) => !data.draft);
+  const en = all.find((p) => entryLang(p) === DEFAULT_LANG && entrySlug(p) === slug);
+  const source = en ?? all.find((p) => entrySlug(p) === slug);
+  const wordCount = (source?.body ?? '').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(wordCount / 220));
+}
