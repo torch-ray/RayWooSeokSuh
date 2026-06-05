@@ -1,0 +1,88 @@
+---
+title: "Drop frames, save the screen"
+subtitle: "Back-pressure design for an on-device vision pipeline."
+date: 2026-06-05
+category: ios
+tags: [swift, concurrency, actor, vision, backpressure]
+---
+
+The camera pushes 60 frames per second. Inference can't keep up. So the engine drops them.
+
+The first wall you hit building an on-device vision camera app is this: the camera streams frames at tens per second, but the ML inference that "understands" each one takes tens of milliseconds. Wire them together naively and the bottleneck migrates from the camera to the inference — the screen stutters. A 60fps camera fed into 10fps inference looks like a 10fps slideshow.
+
+### The queue trap
+
+The first instinct is to reach for a queue. Buffer incoming frames; let inference pull one at a time.
+
+The problem is latency. The moment inference is slower than frame production, the queue never drains — it only grows. The recognition boxes drawn on the screen become older and older. The text that crossed the camera a second ago is what gets labeled right now. In a real-time camera this is worse than a bug: not wrong, just stale. And the memory bleeds with it. A 4K frame is several megabytes; pile them up in a queue indefinitely and the ending writes itself.
+
+In real time, old frames are useless. Perfectly analyzing the scene from a second ago is irrelevant to what the user is looking at now. So the policy simplifies. *If inference is busy, drop the frames that arrive in the meantime — except the most recent one.*
+
+### Drop back-pressure inside an actor
+
+This "no queue, just one latest" logic lives inside an `InferenceEngine` actor. The reasoning is simple. Frames arrive from a camera callback on a background queue, and inference runs asynchronously. Shared state (`pending`, `isProcessing`) is touched from multiple sites, and instead of reaching for an explicit lock, the synchronization is delegated to the actor.
+
+```swift
+func submit(_ frame: Frame) {
+    pending = frame
+    guard !isProcessing else { return }   // busy → keep the latest, drop the rest
+    isProcessing = true
+    drainTask = Task { await self.drain() }
+}
+
+private func drain() async {
+    defer { isProcessing = false }
+    while let frame = pending {
+        pending = nil
+        let objects = await infer(frame, requests)   // suspended; arriving frames overwrite `pending`
+        continuation.yield(PipelineResult(objects: objects, ...))
+    }
+}
+```
+
+The core trick: `pending` isn't a queue, it's a *single slot*. `submit` unconditionally overwrites that one slot with whatever just arrived. If inference is already running (`isProcessing == true`), `submit` returns without spawning another `drain` — it just goes home. Inference suspends at `await infer(...)`, and during that suspension, five frames might land back-to-back; each one overwrites `pending`, and only the last one survives. When inference returns, the `while` in `drain` picks up that surviving frame and goes around again.
+
+`submit` spawning `Task { drain() }` as fire-and-forget is also deliberate. The frame producer (a `for-await` loop in `run`) must not wait on inference. The moment production and processing share a flow, the consumer's speed dictates the producer's.
+
+### Injecting the inference
+
+A small decision here makes a big difference. `InferenceEngine` doesn't call Vision directly. It takes the inference as an injected function.
+
+```swift
+public typealias InferenceFunction = @Sendable (Frame, [InferenceRequest]) async -> [RecognizedObject]
+```
+
+All the engine knows is the contract: *give me a frame, I'll hand recognized objects back, asynchronously*. Whether the implementation is `VNRecognizeTextRequest` or a test stub, the engine doesn't care. This cleanly separates the engine's drop policy from the inference itself. In production, you inject the Vision implementation. In tests, you inject a stub you can pause and release at will.
+
+This matters because the simulator can't access the camera. If the drop logic were tied to the camera, you'd need a physical device every time you wanted to verify the most important part of the engine. With inference injected, the core logic of the engine runs in CI, without hardware.
+
+### Proving the drop, deterministically
+
+How do you prove in a test that frames are dropped when the engine is busy? The tempting answer is "fire ten frames quickly and assert fewer than ten get processed." That test is flaky — it depends on scheduler luck. Whether all ten get processed or only one is a coin flip on any given run.
+
+The fix is to stop relying on timing and construct the scenario directly. Two gates. One the inference uses to announce "I've started." The other the test uses to release "you may finish now." Together they let the test manufacture, by hand, the exact situation where a frame arrives mid-inference.
+
+```swift
+await engine.submit(frame(0))   // start inference(0)
+await started.wait()            // deterministic: inference(0) is now running (busy)
+await engine.submit(frame(1))   // busy → drop
+await engine.submit(frame(2))   // busy → drop, pending = frame(2)
+await proceed.release()         // inference(0) finishes → drain picks up pending(2) → start inference(2)
+await started.wait()            // inference(2) is running (selected, not dropped)
+await proceed.release()
+#expect(processed == [0, 2])    // frame 1 dropped. First + last, in order.
+```
+
+No `sleep`. No flood of submissions. The gates pin the timing down, and the test gives the same answer fifty runs in a row. The result is `[0, 2]` — frame 1 vanished while the engine was busy; only the first frame and the most recent one made it through. That single assertion is the entire contract of drop back-pressure.
+
+### Two clocks, one screen
+
+The backbone of this design is *separation*. The screen runs on the camera's clock (60fps). Inference runs on its own, slower clock. The gap between them is filled by "hold the last result" — keep drawing yesterday's boxes until tomorrow's recognition arrives.
+
+Throwing out the queue and keeping a single slot is, in the end, a judgment call: *a slightly delayed latest beats a perfectly punctual past*. Real-time isn't a promise to process every frame; it's a promise to stay as close to *now* as possible. Better to drop frames and save the screen than save frames and lose it.
+
+### References
+
+- Previous in the series: [CVPixelBuffer is a class. CMTime is a rational.](/posts/cvpixelbuffer-and-cmtime/)
+- Apple Developer Documentation. [AsyncStream](https://developer.apple.com/documentation/swift/asyncstream)
+- Apple Developer Documentation. [Actor](https://developer.apple.com/documentation/swift/actor)
