@@ -1,0 +1,69 @@
+---
+title: "Vision boxes render upside down"
+subtitle: "Vision and SwiftUI disagree on which way y points."
+date: 2026-06-06
+category: ios
+tags: [swift, vision, swiftui, geometry]
+---
+
+The math checks out, but on screen the box is stuck upside down. The two coordinate systems are looking in opposite directions.
+
+Run Vision on text or a rectangle and you get back a `boundingBox`. Draw it straight into a SwiftUI view and the text sits near the top while its box sits near the bottom — flipped vertically. You didn't multiply something wrong. Vision and SwiftUI define their coordinate spaces differently.
+
+### Two mismatches
+
+There are two gaps between Vision's `boundingBox` and SwiftUI's coordinates.
+
+First, the unit. Vision works in normalized coordinates — every value is a 0–1 ratio. SwiftUI draws in points, the real view size. So you multiply by the view size to turn ratios into points.
+
+Second, the origin. This is the real trap. Vision's origin is the bottom-left, with y growing upward, like a math graph. SwiftUI's origin is the top-left, with y growing downward. The two y-axes point in opposite directions. Multiply and draw without accounting for that, and the box flips.
+
+### Flip by the top edge
+
+One pure function solves both at once.
+
+```swift
+enum VisionCoordinate {
+    static func viewRect(for normalizedBox: CGRect, in viewSize: CGSize) -> CGRect {
+        let x = normalizedBox.minX * viewSize.width
+        let y = (1 - normalizedBox.maxY) * viewSize.height   // flip y (bottom-left → top-left)
+        let w = normalizedBox.width * viewSize.width
+        let h = normalizedBox.height * viewSize.height
+        return CGRect(x: x, y: y, width: w, height: h)
+    }
+}
+```
+
+`x`, `width`, and `height` are just multiplications by the view size. The trap is the single `y` line.
+
+The part people trip on: why flip with `maxY`, not `minY`? In a Vision box, `maxY` is the top edge — y grows upward there. But in view coordinates the origin is at the top, so the box's top edge has to land near the top of the screen, at small y. So you take the box's top edge, `maxY`, and flip it with `1 - maxY`, putting "the edge that was up in Vision" up in the view too. Flip with `minY` and the box lands off by its own height.
+
+### Why not the built-in helper?
+
+You might reach for `VNImageRectForNormalizedRect`. But it only resolves the ratios into image pixels — the origin stays bottom-left. It fixes the first mismatch (the unit) and leaves the second (the y-axis) untouched. You still have to flip by hand to draw in SwiftUI, so it's cleaner to keep both conversions in one function.
+
+### Pin it with a test
+
+The test case is one sentence made executable: a box with high y in Vision (the top) must end up near y = 0 in the view (the top).
+
+```swift
+let visionBox = CGRect(x: 0.0, y: 0.8, width: 0.5, height: 0.2)  // a strip at the top in Vision
+let rect = VisionCoordinate.viewRect(for: visionBox, in: CGSize(width: 100, height: 200))
+#expect(abs(rect.minY - 0) < 0.0001)   // y 0.8–1.0 (top) → view y ≈ 0 (top)
+```
+
+That assertion is the whole contract.
+
+### The crop we didn't solve
+
+This conversion assumes the view and the camera buffer share an aspect ratio. Lay the preview out with `.resizeAspectFill` — which looks great because it fills the frame — and part of the buffer gets cropped off-screen, throwing the boxes off by exactly that much. A plain normalized-to-view conversion can't correct for the crop.
+
+So for the first pass, the preview uses `.resizeAspect`. It keeps the ratio without cropping, so this simple conversion lands exactly. Crop correction comes later, when the better-looking `.resizeAspectFill` is worth it — by folding the buffer-vs-view aspect difference into the math. Leaving it as a known limitation beats half-correcting it now and being more wrong.
+
+It's a small function, but it sits exactly where two coordinate systems' contracts have to line up. One wrong line and the whole screen flips. That's why it's pulled out into a helper and nailed down with a test.
+
+### References
+
+- Same pipeline, earlier: [Drop frames, save the screen](/posts/drop-frames-save-the-screen/)
+- Apple Developer Documentation. [VNImageRectForNormalizedRect](https://developer.apple.com/documentation/vision/vnimagerectfornormalizedrect)
+- Apple Developer Documentation. [Vision](https://developer.apple.com/documentation/vision)

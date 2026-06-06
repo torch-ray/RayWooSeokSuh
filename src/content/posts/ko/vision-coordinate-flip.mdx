@@ -1,0 +1,57 @@
+---
+title: "Vision 박스가 위아래로 뒤집혀 그려진다"
+subtitle: "Vision과 SwiftUI가 y축을 반대로 본다."
+date: 2026-06-06
+category: ios
+tags: [swift, vision, swiftui, geometry]
+---
+
+계산은 분명 맞는데 화면에 그려보면 박스가 거꾸로 붙어 있다. 두 좌표계가 서로 다른 방향을 보고 있어서다.
+
+Vision으로 텍스트나 사각형을 검출하면 `boundingBox` 를 돌려준다. 그걸 그대로 SwiftUI 뷰에 그리면 — 글자는 화면 위쪽에 있는데 박스는 아래쪽에, 위아래가 뒤집힌 채로 나타난다. 좌표를 잘못 계산한 게 아니다. Vision과 SwiftUI가 좌표계를 다르게 정의하기 때문이다.
+
+Vision의 `boundingBox` 와 SwiftUI 좌표 사이엔 어긋남이 두 개 있다.
+
+첫째, 단위. Vision은 정규화 좌표를 쓴다 — 모든 값이 0~1 사이의 비율이다. 반면 SwiftUI는 포인트(실제 뷰 크기)로 그린다. 그래서 뷰 크기를 곱해 비율을 포인트로 풀어줘야 한다.
+
+둘째, 원점. 이게 진짜 함정이다. Vision은 좌하단이 원점이고 y가 위로 갈수록 커진다(수학 좌표계처럼). SwiftUI는 좌상단이 원점이고 y가 아래로 갈수록 커진다. 즉 두 좌표계의 y축이 정반대를 본다. 그래서 그냥 곱해서 그리면 위아래가 뒤집힌다.
+
+아래 함수가 이 두 가지 문제를 동시에 해결해준다.
+
+```swift
+enum VisionCoordinate {
+    static func viewRect(for normalizedBox: CGRect, in viewSize: CGSize) -> CGRect {
+        let x = normalizedBox.minX * viewSize.width
+        let y = (1 - normalizedBox.maxY) * viewSize.height   // y 뒤집기 (좌하단 → 좌상단)
+        let w = normalizedBox.width * viewSize.width
+        let h = normalizedBox.height * viewSize.height
+        return CGRect(x: x, y: y, width: w, height: h)
+    }
+}
+```
+
+`x`, `width`, `height` 는 그냥 뷰 크기를 곱하면 끝이다. 함정은 `y` 한 줄이다.
+
+여기서 흔히 헷갈리는 게 있다 — 왜 `minY` 가 아니라 `maxY` 로 뒤집을까. Vision 박스에서 `maxY` 는 윗변이다(y가 위로 커지니까). 그런데 뷰 좌표에선 원점이 위에 있어서, 박스의 윗변이 곧 화면 위쪽(y가 작은 쪽)에 와야 한다. 그래서 박스의 윗변인 `maxY` 를 가져다 `1 - maxY` 로 뒤집어, "Vision에서 위에 있던 변"을 "뷰에서도 위"에 놓는 거다. `minY` 로 뒤집으면 박스가 자기 높이만큼 어긋나 버린다.
+
+Apple이 주는 `VNImageRectForNormalizedRect` 를 떠올릴 수도 있다. 하지만 그건 정규화 비율을 이미지 픽셀 크기로 풀어줄 뿐, 원점은 여전히 좌하단이다. 첫째 어긋남(단위)은 해결해도 둘째 어긋남(y축)은 그대로 남는다. 결국 SwiftUI에 그리려면 뒤집기를 직접 해야 하니, 두 변환을 한 함수에 담아두는 편이 깔끔하다.
+
+테스트 케이스는 다음과 같다. "Vision에서 y가 큰(위쪽) 박스는, 뷰에서 y가 0에 가까운(위쪽) 자리로 가야 한다" — 이 한 문장을 그대로 검증하면 된다.
+
+```swift
+let visionBox = CGRect(x: 0.0, y: 0.8, width: 0.5, height: 0.2)  // Vision 기준 위쪽 띠
+let rect = VisionCoordinate.viewRect(for: visionBox, in: CGSize(width: 100, height: 200))
+#expect(abs(rect.minY - 0) < 0.0001)   // y=0.8~1.0(위) → 뷰 y≈0(위)
+```
+
+다만, 이 변환은 뷰와 카메라 버퍼의 종횡비가 같다고 가정한다. 프리뷰를 `.resizeAspectFill` 로 깔면 — 보기엔 꽉 차서 좋지만 — 버퍼의 일부가 화면 밖으로 잘려나가고, 그만큼 박스도 어긋난다. 단순 정규화→뷰 변환만으로는 그 크롭 보정이 안 된다.
+
+그래서 phase1에서는 프리뷰를 `.resizeAspect` 로 두기로 했다. 잘림 없이 비율을 유지하니 이 단순 변환이 그대로 맞아떨어진다. 크롭 보정은 보기 좋은 `.resizeAspectFill` 이 필요해지는 시점에 — 버퍼와 뷰의 종횡비 차를 함께 계산해 — 따로 붙일 예정이다. 알려진 한계로 남겨두는 편이, 지금 어설프게 보정하다 더 틀리는 것보다 낫다고 판단했다.
+
+작은 함수지만 좌표계 두 개의 약속을 정확히 옮기는 자리라, 한 줄만 틀려도 화면 전체가 뒤집힌다. 그래서 헬퍼로 떼어내 테스트로 못 박았다.
+
+### References
+
+- 같은 파이프라인 이야기: [프레임을 버려야 화면이 산다](/ko/posts/drop-frames-save-the-screen/)
+- Apple Developer Documentation. [VNImageRectForNormalizedRect](https://developer.apple.com/documentation/vision/vnimagerectfornormalizedrect)
+- Apple Developer Documentation. [Vision](https://developer.apple.com/documentation/vision)
