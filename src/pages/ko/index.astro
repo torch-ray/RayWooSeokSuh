@@ -7,6 +7,8 @@ import LangToggle from '../../components/LangToggle.astro';
 import { getPostsByLang } from '../../lib/posts';
 
 const posts = await getPostsByLang('ko');
+const recent = posts.slice(0, 5);
+const hasMore = posts.length > recent.length;
 ---
 
 <BaseLayout title="Ray Suh" lang="ko" altLang="en" altPath="/">
@@ -21,7 +23,15 @@ const posts = await getPostsByLang('ko');
           </h2>
           <LangToggle currentLang="ko" otherUrl="/" />
         </div>
-        <PostList posts={posts} lang="ko" />
+        <PostList posts={recent} lang="ko" />
+        {hasMore && (
+          <a
+            href="/ko/writing/"
+            class="mt-6 inline-block text-[12px] text-ink-muted-light dark:text-ink-muted hover:text-ink-fg-light dark:hover:text-ink-fg transition-colors"
+          >
+            View all writing →
+          </a>
+        )}
       </section>
     </div>
   </main>
