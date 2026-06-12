@@ -1,0 +1,54 @@
+---
+title: "Why Diffable Data Source demands Hashable"
+subtitle: "That Hashable is your definition of 'the same row.'"
+date: 2026-06-12
+category: ios
+tags: [swift, hashable, diffable-data-source, uikit, algorithms]
+---
+
+The first thing the compiler demands when you reach for `UICollectionViewDiffableDataSource` is that your item type be `Hashable`. Not `Equatable` — `Hashable`, specifically. It looks like a syntactic formality. It isn't. That one requirement carries both how the diff works and a design decision you can't avoid: what counts as "the same row."
+
+### Equatable is O(n), Hashable is O(1)
+
+`Equatable` is the contract that two values can be compared with `==`. Call `contains` on an array and it scans cell by cell with `==` — a million elements with your match at the end means a million comparisons, O(n). `Hashable` is the contract that a value can be compressed into a single integer. `Set` and `Dictionary` use that hash to compute a slot index and go straight there — a million elements or a billion, it's O(1). `Hashable` refines `Equatable`, so among hash collisions the final identity is still settled by `==`.
+
+### The diff needs a hash to stay linear
+
+What a Diffable Data Source actually does is compute the difference between two snapshots — the old state and the new one. It has to extract what was inserted, deleted, and moved so it can touch exactly those cells. Do that with a plain `Equatable` array and you're running a nested loop to find where each old item landed in the new array: O(N²). A few hundred items and the main thread stutters; frames drop.
+
+The classic way to collapse this to O(N) is Paul Heckel's hash-based linear diff, published in 1978. Without a hash, that family of algorithm doesn't work. That's exactly the point Diffable Data Source touches when it asks your item for `Hashable` and not just `Equatable`.
+
+Heckel's gist: scan the old and new arrays once each, recording in a hash table how many times each item appears on each side and at what index. Then find the anchors — items that appear exactly once in the old array and exactly once in the new. With only one on each side, those couldn't have changed value; they either stayed put or just moved. Link each anchor pair, then walk outward: the cell right after an anchor on one side maps directly, through the hash table, to the cell right after its partner — compare them in O(1) instead of rescanning the whole opposite array, and link them if they match. Whatever ends up unlinked is an insert or a delete; linked but out of order is a move. No nested loop — five or six straight passes. The hash is what keeps every step O(1).
+
+### Your Hashable is the row's identity
+
+Here's the part that actually matters when you use it. *Your item's `Hashable` conformance is the definition of that row's identity.* The diff decides "is this the same item?" using your hash and `==`, and you're the one who writes that rule.
+
+The common trap: let a struct synthesize `Hashable` and every stored property goes into the hash and `==`.
+
+```swift
+struct Person: Hashable {
+    let id: UUID
+    var name: String
+    var age: Int        // change age alone and the hash changes
+}
+```
+
+Now a row for "Aiden, 25" whose age ticks up to 26 reads, to the diff, as a completely different item — its hash moved. The result is a delete + insert, not an update. The cell doesn't animate its content smoothly; it's torn down and rebuilt, and selection state or an in-flight animation goes with it.
+
+### Separate identity from value
+
+So the move is to split identity from value. Put only the stable id into the hash and `==` (identity), and when the displayed value changes, announce that separately with `reconfigureItems` / `reloadItems` (value). Now the diff sees "same row, new contents" and re-renders just that cell. On iOS 15+, the recommended shape is to make the snapshot's item type a lightweight id outright and pull cell configuration into a `CellRegistration` paired with `reconfigureItems`.
+
+### The trade-off
+
+Demanding `Hashable` costs memory — the hash table keeps headroom empty to hold its load factor and to absorb collisions. Apple spent it gladly. A modern iPhone has gigabytes of RAM, so a few megabytes of hash table for tens of thousands of items is nothing; a diff that balloons to O(N²) inside the ~16ms the main thread has to draw a frame, on the other hand, is the thing that breaks 60fps.
+
+So the `Hashable` requirement on Diffable Data Source isn't a syntactic whim. It's the entrance to a trade — spend a little memory, save dramatically on CPU time, keep the diff at O(N), keep the screen smooth. And the first move in that trade is yours: deciding what goes into your item's `Hashable` as its identity.
+
+### References
+
+- Same series: [Drop frames, save the screen](/posts/drop-frames-save-the-screen/)
+- Heckel, P. (1978). A technique for isolating differences between files. *Communications of the ACM.*
+- Apple Developer Documentation. [NSDiffableDataSourceSnapshot](https://developer.apple.com/documentation/uikit/nsdiffabledatasourcesnapshot)
+- Apple Developer Documentation. [Hashable](https://developer.apple.com/documentation/swift/hashable)
