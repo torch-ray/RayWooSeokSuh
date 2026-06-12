@@ -4,11 +4,16 @@ import SiteNav from '../components/SiteNav.astro';
 import Sidebar from '../components/Sidebar.astro';
 import PostList from '../components/PostList.astro';
 import LangToggle from '../components/LangToggle.astro';
-import { getPostsByLang } from '../lib/posts';
+import { getPostsByLang, categoryUrl } from '../lib/posts';
+import { CATEGORIES, CATEGORY_LABELS } from '../content.config';
 
 const posts = await getPostsByLang('en');
 const recent = posts.slice(0, 5);
 const hasMore = posts.length > recent.length;
+
+const topics = CATEGORIES
+  .map((cat) => ({ cat, count: posts.filter((p) => p.data.category === cat).length }))
+  .filter((t) => t.count > 0);
 ---
 
 <BaseLayout title="Ray Suh" altLang="ko" altPath="/ko/">
@@ -34,5 +39,24 @@ const hasMore = posts.length > recent.length;
         )}
       </section>
     </div>
+
+    {topics.length > 0 && (
+      <div class="mt-14 pt-7 border-t border-ink-hairline-light dark:border-ink-hairline">
+        <h2 class="text-[12px] uppercase tracking-[0.12em] font-semibold text-ink-muted-light dark:text-ink-muted mb-3">
+          Browse by topic
+        </h2>
+        <div class="flex flex-wrap gap-x-5 gap-y-2 text-[13.5px]">
+          {topics.map((t) => (
+            <a
+              href={categoryUrl('en', t.cat)}
+              class="text-ink-fg-light/85 dark:text-ink-fg/85 hover:text-ink-fg-light dark:hover:text-ink-fg transition-colors"
+            >
+              {CATEGORY_LABELS[t.cat]}
+              <span class="text-ink-muted-light/60 dark:text-ink-muted/60 text-[11px] ml-0.5">{t.count}</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
   </main>
 </BaseLayout>
