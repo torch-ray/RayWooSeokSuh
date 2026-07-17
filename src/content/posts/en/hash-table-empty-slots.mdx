@@ -1,0 +1,37 @@
+---
+title: "The empty slots are the point"
+subtitle: "How Swift's Dictionary guards empty slots in open addressing."
+date: 2026-07-17
+category: cs
+tags: [hash-table, open-addressing, swift, data-structures]
+---
+
+You learn hash tables by focusing on how values go in and come out. But the longer you stare at one, the more it seems like the thing that actually holds the performance together isn't the filled cells — it's the *empty* ones. Especially in the open addressing that Swift's `Dictionary` and `Set` use. The empty slots decide three things: where a lookup stops, whether values spread evenly, and whether deletion quietly corrupts the table.
+
+### An empty slot is how a lookup stops
+
+Open addressing computes a slot number from the hash, drops the value there, and if that cell is taken, walks forward to the next one until it finds an empty slot (probing). Lookups walk the same way, starting from the computed slot. Here's the empty slot's first job: *the moment a probe hits a slot that was never used, it concludes "this value isn't here" and stops.* An empty slot isn't unused space — it's the termination condition for search. Fill the table completely so no empty slot remains, and a lookup for an absent key has nowhere to stop; it degrades to scanning the whole table, O(n).
+
+### They have to be spread evenly
+
+So just having lots of empty slots is enough? No — they have to be *evenly distributed*, and that's where hash-function quality comes in. A good hash spreads distinct values as uniformly as possible across the slot space. If the function clumps values into one region, that region packs tight and probes run long there, while the far side sits idle with nothing but empty slots. Even at a low overall load factor, you get local pockets that behave like O(n). This is why Swift doesn't use the raw hash value as the slot directly — it mixes it with a per-execution random seed to scatter it once more, so no input pattern can skew the distribution. (That seed is also why the same keys iterate in a different order across app launches.)
+
+### Load factor decides how many stay empty
+
+How many slots to keep empty is the job of the load factor — filled cells ÷ total cells. As it approaches 1, as empty slots get scarce, probe length explodes non-linearly. In the idealized uniform model, the expected probes for an unsuccessful search is `1/(1−α)`, so at α = 0.75 that's 4. Swift's linear probing is worse than the ideal because filled cells clump together (primary clustering): at the same 0.75, an unsuccessful search runs `½(1 + 1/(1−α)²)` ≈ 8.5 probes. Either way the shape is the same — it blows up as α → 1. So Swift, like most implementations, grows the table and rehashes everything once the load factor crosses a threshold (around 0.75), always keeping a meaningful fraction of cells empty.
+
+### Deletion is where it gets delicate
+
+The subtle one is deletion. You can't just delete a value and blank its cell. Values that were probed *past* that cell and stored further down would suddenly hit the freshly emptied slot, where search stops and wrongly reports "not found." The very property that makes empty slots useful — they terminate search — turns into poison at deletion time.
+
+Ordinary open addressing solves this with tombstones. Instead of truly emptying the deleted cell, it leaves a "deleted" marker: search passes through it, insertion may reuse it. The catch is that tombstones accumulate — repeated deletions leave a growing population of "looks empty but doesn't stop a search" cells that every lookup has to skip past.
+
+Swift takes another route. Because linear probing keeps probe sequences contiguous, it fills the deleted spot by pulling later elements back into it (backward-shift deletion). Starting from the deleted cell, it scans forward and drags into the gap any element that would still be findable from its own hash home after the move — cascading through the cluster until it cleans up. The deleted cell becomes a *real* empty slot again. No tombstones pile up, and the "empty means stop" invariant stays clean. This works cleanly only because linear probing keeps probes contiguous; a scattered scheme like double hashing has no choice but to use tombstones.
+
+So Swift's O(1) stands on empty slots. Empty slots end the search (termination), the hash function keeps them evenly spread (distribution), the load factor keeps enough of them around (headroom), and even deletion restores a real empty slot instead of faking one (backward-shift). Look only at where values go and a hash table is a magically fast set of lockers. But what actually holds up that speed is the cells left deliberately empty.
+
+### References
+
+- Knuth, D. E. *The Art of Computer Programming, Vol. 3: Sorting and Searching.* (linear probing, Algorithm R for deletion)
+- Apple Developer Documentation. [Hasher](https://developer.apple.com/documentation/swift/hasher)
+- Swift open source. [Dictionary / Set implementation (swift/stdlib)](https://github.com/swiftlang/swift/tree/main/stdlib/public/core)

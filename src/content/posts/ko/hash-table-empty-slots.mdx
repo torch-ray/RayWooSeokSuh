@@ -1,0 +1,29 @@
+---
+title: "해시 테이블의 주인공은 빈칸이다"
+subtitle: "Swift Dictionary가 open addressing에서 빈칸을 지키는 법."
+date: 2026-07-17
+category: cs
+tags: [hash-table, open-addressing, swift, data-structures]
+---
+
+해시 테이블을 배울 때 보통 값을 어떻게 넣고 찾는지에 집중한다. 그런데 오래 들여다볼수록, 성능을 실제로 쥐고 있는 건 채워진 칸이 아니라 *빈칸* 이라는 생각이 든다. Swift의 `Dictionary` 와 `Set` 이 쓰는 open addressing에선 특히 그렇다. 빈칸이 세 가지를 결정한다 — 조회가 어디서 끝나는지, 값이 고르게 퍼지는지, 삭제가 테이블을 망가뜨리지 않는지.
+
+open addressing은 값을 넣을 때 해시 함수가 슬롯 번호를 계산해 그 칸에 넣고, 이미 차 있으면 다음 칸으로 밀려가며 빈칸을 찾는다(probing). 찾을 때도 계산된 슬롯부터 순서대로 훑는다. 여기서 빈칸의 첫 역할이 나온다 — *한 번도 안 쓰인 빈칸을 만나는 순간 "이 값은 없다" 로 확정하고 멈춘다.* 빈칸은 안 쓰는 공간이 아니라 탐색의 종료 조건이다. 테이블이 꽉 차 빈칸이 없으면, 없는 값을 찾을 때 멈출 지점이 사라져 테이블 전체를 도는 O(n)으로 추락한다.
+
+그럼 빈칸이 많기만 하면 되나. 아니다. 고르게 흩어져 있어야 한다. 여기서 해시 함수의 품질이 들어온다. 좋은 해시 함수는 서로 다른 값을 슬롯 공간에 최대한 균등하게 뿌린다. 함수가 특정 구간에만 값을 몰면 그 구간은 빽빽이 차 probing이 길어지고, 반대편은 빈칸만 남아 논다. 전체 적재율이 낮아도 국소적으로 O(n)에 가까운 구간이 생기는 것이다. 그래서 Swift는 해시값을 그대로 슬롯에 쓰지 않고 실행마다 랜덤한 시드(seed)와 섞어 한 번 더 흩는다 — 입력이 뭐든 분포가 쏠리지 않게. (같은 키라도 앱을 껐다 켜면 `Set` 순회 순서가 달라지는 게 이 시드 때문이다.)
+
+빈칸을 얼마나 남길지는 load factor(적재율)가 정한다 — 채워진 칸 ÷ 전체 칸. 적재율이 1에 가까워질수록, 즉 빈칸이 귀해질수록 probing 길이가 비선형으로 폭발한다. 이상적인 uniform 모델에선 실패 탐색 기대 probe 수가 `1/(1−α)` 라, α=0.75면 4번이다. 다만 Swift가 쓰는 linear probing은 찬 칸들이 서로 뭉치는 클러스터링 때문에 이보다 나빠서, 같은 0.75에서 실패 탐색이 `½(1 + 1/(1−α)²)` ≈ 8.5번까지 간다. 공통점은 α가 1로 갈수록 터진다는 것. 그래서 Swift를 포함한 대부분의 구현은 적재율이 임계값(대략 0.75)을 넘으면 테이블을 키우고 전부 재배치한다. 늘 상당 비율을 빈칸으로 비워두는 셈이다.
+
+가장 미묘한 건 삭제다. 값을 지우고 그 칸을 그냥 비우면 안 된다. 그 칸을 지나 probing으로 뒤에 저장됐던 값들이, 갑자기 생긴 빈칸에서 탐색이 멈춰 "없다" 로 오판되기 때문이다. 빈칸이 탐색을 종료시킨다는 바로 그 성질이, 삭제할 땐 독이 된다.
+
+일반적인 open addressing은 이걸 tombstone(묘비)으로 푼다. 지운 칸을 진짜 비우지 않고 "삭제됨" 표식을 남겨, 탐색은 통과시키되 삽입 땐 재활용한다. 문제는 tombstone이 쌓인다는 것 — 삭제를 반복하면 "비어 보이지만 탐색을 안 멈추는 가짜 빈칸" 이 늘어 조회가 계속 그걸 건너뛴다.
+
+Swift는 다른 길을 간다. linear probing이라 probe 순서가 연속적이라는 점을 이용해, 지운 자리를 뒤 원소로 당겨 메운다(backward-shift deletion). 지운 칸부터 뒤로 훑으며 "앞으로 당겨와도 자기 해시 홈에서 여전히 찾아지는" 원소들을 gap으로 끌어온다. 연쇄적으로 클러스터가 정리되고, 지운 칸은 다시 *진짜* 빈칸이 된다. tombstone이 안 쌓이고, "빈칸 = 탐색 종료" 불변식이 깨끗하게 유지된다. 이 backward-shift가 깔끔하게 되는 건 probe가 연속인 linear probing이기 때문이고, double hashing처럼 probe가 흩어지는 방식은 어쩔 수 없이 tombstone을 쓴다.
+
+정리하면 Swift 해시의 O(1)은 빈칸 위에 서 있다. 빈칸이 탐색을 끝내주고(종료), 해시 함수가 빈칸을 고르게 남기고(분포), 적재율이 빈칸을 충분히 남기고(총량), 삭제조차 빈칸을 가짜로 채우지 않고 진짜로 되살린다(backward-shift). 값을 어디 넣느냐만 보면 해시 테이블은 마법처럼 빠른 사물함이다. 하지만 그 속도를 지탱하는 건, 아무것도 넣지 않고 비워둔 칸들이다.
+
+### References
+
+- Knuth, D. E. *The Art of Computer Programming, Vol. 3: Sorting and Searching.* (linear probing, Algorithm R for deletion)
+- Apple Developer Documentation. [Hasher](https://developer.apple.com/documentation/swift/hasher)
+- Swift open source. [Dictionary / Set implementation (swift/stdlib)](https://github.com/swiftlang/swift/tree/main/stdlib/public/core)
