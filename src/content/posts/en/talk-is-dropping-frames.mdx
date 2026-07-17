@@ -1,0 +1,37 @@
+---
+title: "Giving the talk was also about dropping frames"
+subtitle: "What 30 minutes at an internal tech day taught me."
+date: 2026-07-17
+category: career
+tags: [talk, techday, communication, reflection]
+---
+
+import { Image } from 'astro:assets';
+import talkPhoto from '../../../assets/techday-2026-talk.png';
+import titleSlide from '../../../assets/techday-2026-title.jpg';
+
+<figure>
+  <Image src={talkPhoto} alt="On stage at the internal tech day, speaking into a mic" />
+  <figcaption>Internal company-wide tech day, Track C.</figcaption>
+</figure>
+
+Last week I gave a talk at our internal tech day — the one where every engineering discipline shows up. Track C, 30 minutes. The title: "Drop frames, save the screen."
+
+<figure>
+  <Image src={titleSlide} alt="The talk's title slide — Drop frames, save the screen" />
+  <figcaption>The title slide, right before I started.</figcaption>
+</figure>
+
+The subject was the real-time pipeline design of an on-device vision camera app I built. The camera pushes 60 frames a second, ML inference can't keep up, and the right answer turns out to be dropping the backed-up frames and keeping only the latest one. (The engineering details are [written up separately](/posts/drop-frames-save-the-screen/).)
+
+But what actually hit me while preparing was that *making the talk was the same problem as the talk itself.*
+
+When I first drafted the slides, I was building a queue. Three years of decisions, actor concurrency, coordinate flips, test strategy, privacy design — I wanted all of it in, dropping nothing. Which was exactly the "just wire it straight through" version from my own demo. Every slide true, but 30 minutes is an inference rate that can't consume all of it. From the audience's side the slides just pile up like a queue while comprehension keeps lagging in the past. And this wasn't an iOS-only room. Backend, frontend, infra — all disciplines. Try to unpack what `CVPixelBuffer` is and how actors work and half the room falls off in the first two minutes.
+
+So I put a drop policy on the talk too. "A slightly late present beats an on-time past" — my own slogan — I applied it to cutting slides. Detail got dropped hard; I kept the one sentence I wanted to land: *sometimes throwing things away is the right answer.* I'd prepared thirty-some Q&A answers and put almost none of them on slides. Those went in the pending slot, pulled out only when a question actually arrived.
+
+The stage taught me something similar. The harder I tried to read the script perfectly, the less I met anyone's eyes. Clutching the script — the queue — meant not seeing the people actually in front of me. A few times I dropped the script and just said whatever came to mind, and that's when the room responded. A slightly rough present beat a perfect past.
+
+What stuck with me afterward was that framing it as *sharing the design decisions and their rationale*, not showing off a finished product, was the right call. Code, talks, careers — in the end it seems less about what you put in than what you leave out. Hold everything and the queue overflows. Pick one thing and let the rest go, and you get to stay attached to the present.
+
+Thirty minutes was short, and I probably dropped about half. That's why the screen stayed alive.
