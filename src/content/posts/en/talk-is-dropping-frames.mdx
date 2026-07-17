@@ -8,7 +8,7 @@ tags: [talk, techday, communication, reflection]
 
 import { Image } from 'astro:assets';
 import talkPhoto from '../../../assets/techday-2026-talk.png';
-import titleSlide from '../../../assets/techday-2026-title.jpg';
+import roomShot from '../../../assets/techday-2026-room.png';
 
 <figure>
   <Image src={talkPhoto} alt="On stage at the internal tech day, speaking into a mic" />
@@ -18,8 +18,8 @@ import titleSlide from '../../../assets/techday-2026-title.jpg';
 Last week I gave a talk at our internal tech day — the one where every engineering discipline shows up. Track C, 30 minutes. The title: "Drop frames, save the screen."
 
 <figure>
-  <Image src={titleSlide} alt="The talk's title slide — Drop frames, save the screen" />
-  <figcaption>The title slide, right before I started.</figcaption>
+  <Image src={roomShot} alt="The room during the talk — the audience, the title slide, and the podium" />
+  <figcaption>That title, up on the screen in the room.</figcaption>
 </figure>
 
 The subject was the real-time pipeline design of an on-device vision camera app I built. The camera pushes 60 frames a second, ML inference can't keep up, and the right answer turns out to be dropping the backed-up frames and keeping only the latest one. (The engineering details are [written up separately](/posts/drop-frames-save-the-screen/).)

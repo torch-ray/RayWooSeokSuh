@@ -8,7 +8,7 @@ tags: [talk, techday, communication, reflection]
 
 import { Image } from 'astro:assets';
 import talkPhoto from '../../../assets/techday-2026-talk.png';
-import titleSlide from '../../../assets/techday-2026-title.jpg';
+import roomShot from '../../../assets/techday-2026-room.png';
 
 <figure>
   <Image src={talkPhoto} alt="사내 테크데이에서 마이크를 잡고 발표 중인 모습" />
@@ -18,8 +18,8 @@ import titleSlide from '../../../assets/techday-2026-title.jpg';
 지난주, 사내 전 개발직군이 모이는 테크데이에서 발표를 했다. 트랙 C, 30분. 제목은 "프레임을 버려야 화면이 산다".
 
 <figure>
-  <Image src={titleSlide} alt="발표 타이틀 슬라이드 — 프레임을 버려야 화면이 산다" />
-  <figcaption>시작 전 타이틀 슬라이드.</figcaption>
+  <Image src={roomShot} alt="발표장 전경 — 청중 뒤로 '프레임을 버려야 화면이 산다' 슬라이드와 무대" />
+  <figcaption>발표장 스크린에 걸린 그 제목.</figcaption>
 </figure>
 
 주제는 내가 만든 온디바이스 비전 카메라 앱의 실시간 파이프라인 설계였다. 카메라는 초당 60장을 쏟아내는데 ML 추론은 그걸 못 따라가고, 그래서 밀린 프레임을 버리고 최신 한 장만 남기는 게 정답이더라는 얘기. (기술적인 내용은 [따로 정리해뒀다](/ko/posts/drop-frames-save-the-screen/).)
