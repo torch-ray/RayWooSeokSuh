@@ -42,18 +42,23 @@ export const profile: Profile = {
   name: 'Ray WooSeok Suh',
   role: 'iOS Engineer',
   lede:
-    'iOS engineer based in Seoul. Currently on the Baemin app — Korea\'s largest food delivery service — where my work tends to live in the deeper layers: Clean Architecture, Microfeatures with Tuist, Swift 6 migration, and the parts of the codebase most people prefer to leave alone. I\'m drawn to animations that feel right, performance work, and going down to the core when it matters.',
+    'iOS engineer based in Seoul, now at KakaoBank since September 14, 2026. Previously at Woowa Brothers, I worked on the Baemin app across commerce and mobile platform: Clean Architecture, Microfeatures with Tuist, Swift 6 migration, and animation performance. I\'m drawn to animations that feel right, performance work, and going down to the core when it matters.',
   now: {
-    company: 'Woowa Brothers (Baemin)',
+    company: 'KakaoBank',
     role: 'iOS Engineer',
-    start: '2021',
+    start: '2026.09.14',
     end: 'Present',
-    summary:
-      'Several years on Baemin Commerce — grocery delivery (B마트, 장보기), Swift 6 migration, modularization, architectural overhaul. Recently moved to Mobile Platform, closer to the core. Now the sole iOS engineer on the task force shipping Baemin 2.0\'s fluid animation layer.',
-    stack: ['Swift 6', 'Tuist', 'Microfeatures', 'Factory DI', 'Core Animation'],
   },
   previously: [
-    // TODO: fill in prior roles
+    {
+      company: 'Woowa Brothers (Baemin)',
+      role: 'iOS Engineer',
+      start: '2021',
+      end: '2026.09',
+      summary:
+        'Worked on Baemin Commerce — grocery delivery (B마트, 장보기), Swift 6 migration, modularization, and architectural overhaul — before moving to Mobile Platform. Served as the sole iOS engineer on the task force building Baemin 2.0\'s fluid animation layer.',
+      stack: ['Swift 6', 'Tuist', 'Microfeatures', 'Factory DI', 'Core Animation'],
+    },
   ],
   education: [
     // TODO: fill in education
